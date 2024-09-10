@@ -32,18 +32,19 @@ void read_processes(char *filename, Process processes[], int *n) {
     fclose(file);
 }
 
+//Se paso current_time como puntero a fcfs para asegurar que el tiempo se comparta y acumule correctamente entre las colas
+
 //Funcion First Come First Served
-void fcfs(Process queue[], int count, int *total_waiting_time, int *total_turnaround_time) {
-    int current_time = 0;
+void fcfs(Process queue[], int count, int *total_waiting_time, int *total_turnaround_time, int *current_time) {
     for (int i = 0; i < count; i++) {
-        if (queue[i].arrival_time > current_time) {
-            current_time = queue[i].arrival_time;
+        if (queue[i].arrival_time > *current_time) {
+            *current_time = queue[i].arrival_time;
         }
-        queue[i].start_time = current_time;
-        queue[i].completed_time = current_time + queue[i].burst_time;
+        queue[i].start_time = *current_time;
+        queue[i].completed_time = *current_time + queue[i].burst_time;
         queue[i].waiting_time = queue[i].start_time - queue[i].arrival_time;
         queue[i].turnaround_time = queue[i].completed_time - queue[i].arrival_time;
-        current_time = queue[i].completed_time;
+        *current_time = queue[i].completed_time;
         
         //Acumular tiempos para promedios
         *total_waiting_time += queue[i].waiting_time;
@@ -54,14 +55,17 @@ void fcfs(Process queue[], int count, int *total_waiting_time, int *total_turnar
     }
 }
 
+//Se paso current_time como puntero a fcfs para asegurar que el tiempo se comparta y acumule correctamente entre las colas
+
 //Funcion mlq basado en múltiples niveles de colas con FCFS
 void mlq(Process processes[], int n) {
     Process queue1[n], queue2[n], queue3[n];
     //Numero de procesos en cada cola de prioridad
     int count1 = 0, count2 = 0, count3 = 0;
     int total_waiting_time = 0, total_turnaround_time = 0;
+    int current_time = 0;
 
-    //Separar procesos en colas según su prioridad
+    // Separar procesos en colas según su prioridad
     for (int i = 0; i < n; i++) {
         if (processes[i].priority == 1)
             queue1[count1++] = processes[i];
@@ -72,16 +76,17 @@ void mlq(Process processes[], int n) {
     }
     
     //Implementar FCFS
-    printf("Ejecucion del MLQ:\n");
-    fcfs(queue1, count1, &total_waiting_time, &total_turnaround_time);
-    fcfs(queue2, count2, &total_waiting_time, &total_turnaround_time);
-    fcfs(queue3, count3, &total_waiting_time, &total_turnaround_time);
+    printf("Ejecución del MLQ:\n");
+    fcfs(queue1, count1, &total_waiting_time, &total_turnaround_time, &current_time);
+    fcfs(queue2, count2, &total_waiting_time, &total_turnaround_time, &current_time);
+    fcfs(queue3, count3, &total_waiting_time, &total_turnaround_time, &current_time);
 
     //Calcular y mostrar promedios
     int total_processes = count1 + count2 + count3;
     printf("Tiempo promedio de WT en MLQ: %.2f\n", (float)total_waiting_time / total_processes);
     printf("Tiempo promedio de TAT en MLQ: %.2f\n", (float)total_turnaround_time / total_processes);
 }
+
 
 //Funcion mlfq basado en múltiples colas de prioridad con Round Robin
 void mlfq(Process queue1[], Process queue2[], Process queue3[], int count1, int *count2, int *count3, int quantum[], int *total_waiting_time, int *total_turnaround_time) {
@@ -157,7 +162,7 @@ void init_mlfq(Process processes[], int n) {
 
     // Calcular y mostrar promedios
     int total_processes = count1 + count2 + count3;
-    printf("Tiempo promedio de espera en MLFQ: %.2f\n", (float)total_waiting_time / total_processes);
+    printf("Tiempo promedio de WT en MLFQ: %.2f\n", (float)total_waiting_time / total_processes);
     printf("Tiempo promedio de turnaround en MLFQ: %.2f\n", (float)total_turnaround_time / total_processes);
 }
 
